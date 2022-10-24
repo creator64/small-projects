@@ -1,0 +1,27 @@
+<Menu_Screen>:
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: 50
+
+        MDToolbar:
+            title: "IMAGE PUZZLE"
+
+        MDFillRoundFlatButton:
+            id: difficulty_button
+            pos_hint: {"center_x": .5, "center_y": .5}
+            text: "Choose difficulty"
+            on_release: root.menu.open()
+            font_style: "H3"
+
+        MDLabel:
+            id: difficulty_label
+            halign: "center"
+            text: "Difficulty: " + root.difficulty
+            theme_text_color: "Primary"
+            font_size: "50sp"
+            #font_name: "courier"
+
+        MDRaisedButton:
+            text: "PLAY"
+            font_style: "H3"
+            on_release: root.play_game()

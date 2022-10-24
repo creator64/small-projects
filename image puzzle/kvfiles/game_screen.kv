@@ -1,0 +1,16 @@
+<Small_Image>:
+    pos_hint: {"center_x": .5, "center_y": .5}
+
+
+
+<Game_Screen>:
+    MDBoxLayout:
+        orientation: "vertical"
+        MDToolbar:
+            title: "IMAGE PUZZLE"
+        Widget:
+        MDGridLayout: # this is the imagebox
+            id: imagebox
+            cols: root.diff_number
+            size_hint: None, None
+            pos_hint: {"center_x": .5}
