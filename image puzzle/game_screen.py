@@ -6,10 +6,11 @@ from kivy.core.window import Window
 from kivy.properties import NumericProperty
 from kivy.graphics import Rectangle
 import random
+import copy
 import numpy as np
 
 images = ["Chrysanthemum.jpg", "Desert.jpg", "Hydrangeas.jpg", "Jellyfish.jpg", "Koala.jpg", "Lighthouse.jpg", "Penguins.jpg", "Tulips.jpg"]
-difficulty_numbers = {"easy": 3, "medium": 6, "hard": 10, "very hard": 15, "insane": 21, "impossible": 28} # every difficulty translated to numbers
+difficulty_numbers = {"easy": 3, "medium": 6, "hard": 10, "very hard": 15, "insane": 21, "impossible": 28} # every difficulty translated to the amount of columns and rows the image is divided in
 
 
 class Small_Image(ButtonBehavior, Image): # DONT SWITCH BUTTONBEHAVIOR AND IMAGE
@@ -41,7 +42,7 @@ class Small_Image(ButtonBehavior, Image): # DONT SWITCH BUTTONBEHAVIOR AND IMAGE
         if not self.selected: return
         self.canvas.opacity = 1
         rect = self.get_rectangle()
-        rect.size = tuple(np.array(rect.size) * (1/.8))
+        rect.size = tuple(np.array(rect.size) * (1/self.ssos))
         rect.pos = self.x, self.y
         self.selected = False
 
@@ -58,14 +59,15 @@ class Game_Screen(Screen):
         self.difficulty = difficulty; self.diff_number = difficulty_numbers[self.difficulty]
         imagepath = "images/" + random.choice(images) # choosing a random image
         self.full_texture = coreImage(imagepath).texture # the whole image
-        self.texture_list = [] # a list of all the textures for the smaller images
+        self.original_texture_list = [] # a list of a list of all the textures for the smaller images in the right order
+        self.randomized_texture_list = [] # a list of all the textures for the smaller images
         self.small_images = [] # a list of all the Small_Image instances
 
         super().__init__(**kwargs)
         Window.bind(on_resize=self.resize_imagebox)
         self.keyboard = Window.request_keyboard(self.on_key_down, self)
         self.keyboard.bind(on_key_down=self.on_key_down) # when keyboard is pressed self.on_key_down will be fired
-        self.fill_texture_list()
+        self.fill_original_texture_list()
         self.show_images()
 
     def on_key_down(self, key, scancode, codepoint, modifier):
@@ -76,6 +78,13 @@ class Game_Screen(Screen):
             self.swap_images()
         if keystring == "enter":
             self.deselect_all()
+        self.check_for_win()
+
+    def check_for_win(self):
+        current_full_texture_ids = [small_image.texture for small_image in self.small_images]
+        original_textures_ids = [texture for texture in self.original_texture_list]
+        if current_full_texture_ids == original_textures_ids:
+            print("you win")
 
     def deselect_all(self):
         for small_image in self.small_images:
@@ -132,18 +141,18 @@ class Game_Screen(Screen):
         imagebox.height = imagebox.width * self.imagebox_aspect_ratio
         imagebox.center_y = .5
 
-    def fill_texture_list(self):
+    def fill_original_texture_list(self):
         width = self.full_texture.width; height = self.full_texture.height
         small_width = width/self.diff_number; small_height = height/self.diff_number # the width/height of an image part
-        for x in np.arange(0, width, small_width):
-            for y in np.arange(0, height, small_height):
+        for y in np.arange(height-small_height, -1, -small_height):
+            for x in np.arange(0, width, small_width):
                 small_texture = self.full_texture.get_region(x, y, small_width, small_height)
-                self.texture_list.append(small_texture)
+                self.original_texture_list.append(small_texture)
 
-        random.shuffle(self.texture_list)
+        self.randomized_texture_list = random.sample(self.original_texture_list, len(self.original_texture_list)) # a randomized version of the small images
 
     def show_images(self):
-        for texture in self.texture_list:
+        for texture in self.randomized_texture_list:
             i = Small_Image(texture)
             self.small_images.append(i)
             self.ids.imagebox.add_widget(i)
